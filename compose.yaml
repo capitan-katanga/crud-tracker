@@ -1,0 +1,26 @@
+services:
+  postgres-db:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: ExpenseTracker
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Password123
+    ports:
+      - '5332:5432'
+    volumes:
+      - postgres-db:/data/postgres
+    networks:
+      - postgres-db
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  postgres-db:
+    driver: bridge
+
+volumes:
+  postgres-db:

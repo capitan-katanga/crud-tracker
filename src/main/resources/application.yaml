@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: crud-tracker
+  mvc:
+    problemdetails:
+      enabled: true
+    api-version:
+      use:
+        path-segment: 1
+  threads:
+    virtual:
+      enabled: true
+  docker:
+    compose:
+      lifecycle-management: start-only
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5332/ExpenseTracker
+    username: ${POSTGRES_DB_NAME}
+    password: ${POSTGRES_DB_PASSWORD}

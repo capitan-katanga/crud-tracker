@@ -1,5 +1,6 @@
 package com.expense.tracker.crudtracker.controller;
 
+import com.expense.tracker.crudtracker.apidoc.TransactionApi;
 import com.expense.tracker.crudtracker.dto.TransactionRequestDto;
 import com.expense.tracker.crudtracker.dto.TransactionResponseDto;
 import com.expense.tracker.crudtracker.service.TransactionService;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequestMapping("/api/v{version}/transactions")
-public class TransactionController {
+public class TransactionController implements TransactionApi {
 
     private final TransactionService transactionService;
 
@@ -27,7 +28,7 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    @PostMapping(version = "1")
+    @PostMapping(value = "/", version = "1")
     public ResponseEntity<TransactionResponseDto> registerTransfer(
             @Valid @RequestBody TransactionRequestDto transactionRequestDto
     ) {

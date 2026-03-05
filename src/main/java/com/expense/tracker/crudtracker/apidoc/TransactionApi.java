@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
@@ -23,11 +24,11 @@ public interface TransactionApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Transaction created successfully.", content = @Content(schema = @Schema(implementation = TransactionResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Validation failed."),
-            @ApiResponse(responseCode = "404", description = "User not found.")
+            @ApiResponse(responseCode = "404", description = "Resource not found.")
     })
     ResponseEntity<TransactionResponseDto> registerTransfer(
             @Parameter(description = "Main transaction payload. The 'type' field determines which transaction detail is expected.", required = true)
-            @jakarta.validation.Valid TransactionRequestDto transactionRequestDto
+            @Valid TransactionRequestDto transactionRequestDto
     );
 
     @Operation(

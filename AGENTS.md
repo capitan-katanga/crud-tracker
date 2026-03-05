@@ -3,9 +3,11 @@
 ## Project Overview
 
 Spring Boot 4.0.2 expense tracker CRUD API. Java 25, PostgreSQL, Maven.
-No Lombok, no MapStruct. Manual mappers and explicit getters/setters/constructors.
+No Lombok, no MapStruct. Manual mappers, explicit getters/setters/constructors.
 
-## Build & Run Commands
+---
+
+## Build, Test & Run Commands
 
 All commands use system Maven (`mvn`).
 
@@ -13,7 +15,7 @@ All commands use system Maven (`mvn`).
 # Compile (skip tests)
 mvn compile
 
-# Run all tests
+# Run all unit & integration tests
 mvn test
 
 # Run a single test class
@@ -22,130 +24,152 @@ mvn test -Dtest="TransactionServiceImplTest"
 # Run a single test method
 mvn test -Dtest="TransactionServiceImplTest#getTransactionNotFound"
 
-# Package (produces JAR in target/)
+# Build package (JAR in target/)
 mvn package
 
-# Run the application (requires PostgreSQL via Docker Compose)
+# Run the app (requires PostgreSQL via Docker Compose)
 mvn spring-boot:run
 
-# Clean build
+# Clean build (runs full test + JaCoCo coverage checks)
 mvn clean verify
 ```
 
-There is no configured linter or formatter. No Checkstyle, SpotBugs, or PMD plugins.
+- No Checkstyle, SpotBugs o PMD configurado por defecto (no hay linter/formatter plugin).
+- Code coverage: JaCoCo. Reporte en `target/site/jacoco/index.html`, 90% instrucciones/80% ramas mínimo (excluye config,
+  controller, dto, entity, exception, mapper, repository, *Application).
+- Test data: PostgreSQL por Docker Compose en puerto **5332**. Variables de entorno: `POSTGRES_DB_NAME` (`admin`),
+  `POSTGRES_DB_PASSWORD` (`Password123`).
+- Observabilidad: Grafana LGTM stack, OpenTelemetry exporta a localhost (`4317`, `4318`).
+- Virtual threads habilitadas: `spring.threads.virtual.enabled: true` en config.
 
-## Infrastructure
+---
 
-- PostgreSQL runs via Docker Compose (`compose.yaml`), exposed on host port **5332** (not 5432)
-- Spring Boot auto-starts DB (`spring.docker.compose.lifecycle-management: start-only`)
-- Datasource credentials from env vars: `POSTGRES_DB_NAME` / `POSTGRES_DB_PASSWORD` (local dev: `admin`/`Password123`)
-- Observability: Grafana LGTM stack (Grafana, Loki, Tempo, Mimir) via compose, OpenTelemetry traces/metrics/logs exported to localhost (`4317`, `4318`)
-- Virtual threads are enabled (`spring.threads.virtual.enabled: true`)
-
-## Project Structure
+## Directory Structure
 
 ```
 src/main/java/com/expense/tracker/crudtracker/
-  config/          OpenTelemetry/logback config
-  controller/      REST controllers (@RestController)
-  service/         Service interfaces
-  service/impl/    Service implementations (@Service)
-  repository/      Spring Data JPA repositories (@Repository)
-  entity/          JPA entities (classes), enums
-  dto/             Request/response DTOs (records), marker interfaces
+  config/          Observability config (OpenTelemetry, logback)
+  controller/      REST API (@RestController)
+  service/         Business logic interfaces
+  service/impl/    Business logic implementations (@Service)
+  repository/      Spring Data JPA (@Repository)
+  entity/          Domain models (JPA entities), enums
+  dto/             Request/response DTOs (Java records), marker interfaces
   dto/transfer/    Transfer-specific DTOs
   dto/service/     Service-payment-specific DTOs
-  mapper/          Manual mapping classes (@Component or plain)
-  strategy/        Strategy pattern for transaction-type dispatch
-  exception/       Custom exceptions, @RestControllerAdvice handler
+  mapper/          Manual mapping (@Component or plain class)
+  strategy/        Transaction type dispatch pattern
+  exception/       Custom exceptions, exception handler (@RestControllerAdvice)
 
 src/test/java/com/expense/tracker/crudtracker/
-  service/impl/    Service layer unit tests
-  mock/            TestUtils (shared constants, factories)
+  service/impl/    Unit tests for services
+  mock/            TestUtils, constants and factory methods
 ```
+
+---
 
 ## Code Style Guidelines
 
 ### Formatting & Imports
+
 - 4-space indentation, no tabs
-- Opening brace on same line as declaration; closing brace on its own line
+- Opening brace after declaration on same line; closing brace on its own line
 - One blank line between methods
-- Project, third-party, Jakarta, Spring, Java imports—in that order. Each import on its own line. **No wildcard imports** in production code
-- Static wildcard imports allowed in test files for Hamcrest, Mockito
-- No import grouping or file headers required by convention
+- Order: project > third-party > Jakarta > Spring > Java. One import per line. **No wildcard imports** (except static in
+  tests for Hamcrest/Mockito)
+- No import grouping, reordering, or file headers enforced
 
 ### Types & Data Modeling
-- **DTOs:** Java `record` types (not classes, not Lombok)
-- **Entities:** Plain classes with explicit no-arg constructor, all-args constructor, getters, setters, `equals()`, `hashCode()`
-- **Enums:** For fixed domain values (e.g., `TransactionType`)
-- **Marker interfaces:** Used for sealed polymorphism (`TransactionDetailRequestDto`, `TransactionDetailResponseDto`, `TransactionDetail`)
-- **Records used in tests:** Manual static `Builder` inner class with fluent setters and `build()` method (no Lombok `@Builder`)
+
+- **DTOs:** Use Java `record` types (never classes, never Lombok)
+- **Entities:** Standard Java class (no Lombok!), explicit no-arg and all-arg constructors, getter/setter, manual
+  `equals()/hashCode()`
+- **Enums:** For fixed domain values only (`TransactionType`)
+- **Marker interfaces:** For sealed polymorphism (`TransactionDetailRequestDto`, etc)
+- **Test-only records:** Manual static Builder inner class in tests (not Lombok)
 
 ### Java Language Features
-- Local variable type inference (`var`) used throughout service implementations and tests
-- Pattern matching `instanceof` (e.g., `if (!(o instanceof Transaction that))`)
-- Logging via SLF4J: `private static final Logger log = LoggerFactory.getLogger(...)` (no Lombok `@Slf4j`)
 
-### Naming Conventions
-- **Packages:** Lowercase, singular (`entity`, `repository`, `strategy`)
-- **Classes:** PascalCase; domain entities (`Transaction`, `TransferDetail`)
-- **Service interfaces:** `TransactionService`, implementations: `TransactionServiceImpl`
-- **DTOs:** Suffix with `Dto` (`TransactionRequestDto`, `TransactionResponseDto`). Subtypes in respective sub-packages
-- **Mapper/Repository:** Suffix with `Mapper`/`Repository` (`TransactionMapper`, `TransferDetailRepository`)
-- **Exceptions:** Descriptive + `Exception` suffix (`TransactionNotFoundException`)
-- **Strategy classes:** Suffix with `Strategy` (`TransferDetailStrategy`)
-- **Test classes:** Suffix with `Test`, mirror source class path; test classes are package-private (no `public`)
-- **Test methods:** camelCase, descriptive (e.g., `registersTransactionSuccessfully`)
-- **Constants:** `UPPER_SNAKE_CASE` for `static final` fields
+- Use local variable type inference (`var`) everywhere (services/tests)
+- Use pattern matching `instanceof` (e.g., `if (!(o instanceof Transaction t))`)
+- Logging: `private static final Logger log = LoggerFactory.getLogger(...)` (never Lombok)
+
+### Naming
+
+- **Packages:** Lowercase, singular (e.g., `entity`, `strategy`)
+- **Classes:** PascalCase (`Transaction`, `TransferDetail`)
+- **Services:** Interface: `TransactionService`; Impl: `TransactionServiceImpl`
+- **DTOs:** Suffix with `Dto` (`TransactionRequestDto`)
+- **Mapper/Repository:** Suffix with `Mapper`/`Repository`
+- **Exception:** Suffix `Exception` (`TransactionNotFoundException`)
+- **Strategy:** Suffix `Strategy` (`TransferDetailStrategy`)
+- **Test:** Suffix `Test`, mirrors src class path; class is *package-private* (not `public`)
+- **Test method:** camelCase, descriptive (`registersTransactionSuccessfully`)
+- **Constants:** UPPER_SNAKE_CASE for static finals
 
 ### Validation
-- **Validation enabled** with `spring-boot-starter-validation`
-- Controllers use `@Validated` for request validation
-- DTO record components annotated `@NotNull`, `@NotEmpty`, or `@Valid` as appropriate
+
+- `spring-boot-starter-validation` enabled
+- Controller uses `@Validated`; DTO record components use `@NotNull`, `@NotEmpty`, or `@Valid`
 
 ### Dependency Injection
-- Constructor injection only (no `@Autowired` anywhere)
-- Dependencies are `private final`, assigned in constructor
-- Spring beans: `@Service`, `@Component`, `@Repository`, `@RestController`
+
+- Use **constructor injection** only (never `@Autowired`!)
+- All injected fields are `private final`, set in constructor
+- Annotate beans as `@Service`, `@Component`, `@Repository`, `@RestController`
 
 ### Error Handling
-- Custom exceptions extend `RuntimeException` with a single `String message` constructor
-- `@RestControllerAdvice` (`CustomExceptionHandler`) extends `ResponseEntityExceptionHandler`; returns RFC 9457 `ProblemDetail`
-- Each `@ExceptionHandler` constructs `ProblemDetail` (status, detail, title, `type` URI)
-- Spring MVC problem details enabled (`spring.mvc.problemdetails.enabled: true`)
+
+- Custom exceptions must extend `RuntimeException` with one-arg message constructor
+- Central error handler: `@RestControllerAdvice` class (subclass of `ResponseEntityExceptionHandler`)
+- Returns RFC 9457 `ProblemDetail` for errors (status, detail, title, type URI)
+- `spring.mvc.problemdetails.enabled: true` must be enabled for Error API
 
 ### Patterns
-- **Strategy pattern:**
-  - Interface: `TransactionDetailStrategy` with `supports()`, `registerTransactionDetail()`, `getTransactionDetail()`
-  - Register: `TransactionDetailStrategyRegister` auto-discovers all strategy beans via constructor-injected `List<>`, builds unmodifiable map
-  - Add new transaction type: create `@Component` implementing strategy, add DTO to `@JsonSubTypes` in request/response records
-- **Manual mappers:** Inheritance-based: `TransferDetailMapper extends TransactionMapper` (sub-mappers add detail handling via `super.toResponseDto()`)
-- **Jackson polymorphism for DTOs:**
-  - `@JsonTypeInfo` with `EXTERNAL_PROPERTY` on `detail` field
-  - `@JsonSubTypes` lists DTOs mapped to enum names
-  - Concrete detail DTOs use `@JsonTypeName("ENUM_VALUE")`
-- **API versioning:** Path-segment structure `/api/v{version}/...`, controller methods specify `version = "1"` on mappings
 
-## Testing Conventions
+- **Strategy pattern:**
+    - Interface: `TransactionDetailStrategy` with `supports()`, `registerTransactionDetail()`, `getTransactionDetail()`
+    - Register: `TransactionDetailStrategyRegister` auto-discovers strategy beans by constructor-injected `List`, wrap
+      in unmodifiable map
+    - To add transaction type: create `@Component` strategy, add its DTO in subtypes of request/response records
+- **Manual mappers:** Subclassing: `TransferDetailMapper extends TransactionMapper` (use `super.toResponseDto` to map
+  base fields)
+- **Jackson polymorphism for DTOs:**
+    - Use `@JsonTypeInfo` with `EXTERNAL_PROPERTY` in detail field
+    - `@JsonSubTypes` lists DTOs mapped to transaction-type enum names
+    - Concrete detail DTOs must use `@JsonTypeName("ENUM_VALUE")`
+- **API versioning:** Use path-segment `/api/v{version}/...`, controller methods specify `version = "1"`
+
+---
+
+## Test Conventions
 
 ### Stack
+
 - JUnit 5 + Mockito (`@ExtendWith(MockitoExtension.class)`) + Hamcrest
-- No Spring context loaded in tests, pure mock-based
+- Never load Spring context; pure mock-based access only
 
-### Structure
-- `@Mock` for dependencies, `@Spy` for mappers needing real calls, `@InjectMocks` for class under test
-- `@DisplayName` on every test method
-- Parameterized tests: `@ParameterizedTest` + `@EnumSource(enumClass)`, exclude values with `mode = EnumSource.Mode.EXCLUDE`
-- Test classes are package-private (no `public` modifier)
+### Test Structure
 
-### Assertions and Verification
-- Group assertions: `Assertions.assertAll()`
+- Use `@Mock` for dependencies, `@Spy` for mappers that need real mapping, `@InjectMocks` for SUT
+- `@DisplayName` required on all test methods
+- Use `@ParameterizedTest` + `@EnumSource`, use `mode = Exclude` for enums not needed
+- Test classes are package-private (no `public`)
+
+### Assertions & Verification
+
+- Use `Assertions.assertAll()` to group multiple assertions
 - Use Hamcrest: `assertThat(actual, equalTo(expected))`
-- Exception testing: `Assertions.assertThrows(ExceptionClass.class, () -> ...)`, then `assertThat(..., equalTo(...))`
-- Verify mock interactions: `verify(mock, times(n)).method(...)`, `verifyNoInteractions(mock)`
+- Catch exceptions: `Assertions.assertThrows`, assert details after
+- Verify mocks: `verify(mock, times(n)).method(...)`; use `verifyNoInteractions` if relevant
 
 ### Test Data
-- Shared constants/factories: `src/test/java/.../mock/TestUtils.java`
+
+- Use shared constants/factories from `src/test/java/.../mock/TestUtils.java`
 - Constants: `public static final`, prefixed `TEST_`
 - Factory methods: `public static`, named `create<Entity/Dto>(...)`
-- TestUtils has a private constructor
+- TestUtils must have private constructor
+
+---
+
+## No Cursor .rules or Copilot instructions were detected in this repo. If you add them, summarize those rules here for agent discovery.

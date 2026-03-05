@@ -1,6 +1,7 @@
 package com.expense.tracker.crudtracker.strategy;
 
 import com.expense.tracker.crudtracker.entity.TransactionType;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class TransactionDetailStrategyRegister {
                 ));
     }
 
-    public TransactionDetailStrategy getTransactionStrategy(TransactionType transactionType) {
+    public @Nullable TransactionDetailStrategy getTransactionStrategy(TransactionType transactionType) {
         return strategyMap.get(transactionType);
     }
 

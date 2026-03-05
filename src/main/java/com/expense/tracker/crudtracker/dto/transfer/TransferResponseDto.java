@@ -5,19 +5,36 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @JsonTypeName("TRANSFER")
-public record TransferResponseDto(UUID id,
-                                  String senderName,
-                                  String senderCuit,
-                                  String senderInstitution,
-                                  String senderAccount,
-                                  String receiverName,
-                                  String receiverCuit,
-                                  String receiverInstitution,
-                                  String receiverAccount,
-                                  String operationNumber,
-                                  String referenceCode,
-                                  String motive) implements TransactionDetailResponseDto {
+@Schema(description = "Detail response for transfer-type transactions.")
+public record TransferResponseDto(
+    @Schema(description = "Detail UUID.", example = "b0baa621-d546-425e-a44e-2f53f449a9f7")
+    UUID id,
+    @Schema(description = "Name of the sender.", example = "Juan Perez")
+    String senderName,
+    @Schema(description = "CUIT of the sender.", example = "20-12345678-9")
+    String senderCuit,
+    @Schema(description = "Institution of the sender.", example = "Banco Santa Fe")
+    String senderInstitution,
+    @Schema(description = "Sender's account number.", example = "3660030123456")
+    String senderAccount,
+    @Schema(description = "Name of the receiver.", example = "Carla Gonzalez")
+    String receiverName,
+    @Schema(description = "CUIT of the receiver.", example = "27-87654321-0")
+    String receiverCuit,
+    @Schema(description = "Institution of the receiver.", example = "Banco Galicia")
+    String receiverInstitution,
+    @Schema(description = "Receiver's account number.", example = "4401234001237")
+    String receiverAccount,
+    @Schema(description = "Internal operation number.", example = "000921332")
+    String operationNumber,
+    @Schema(description = "Reference code.", example = "ABC-2024-TF1")
+    String referenceCode,
+    @Schema(description = "Motivation or description of the transfer.", example = "Salary payment")
+    String motive
+) implements TransactionDetailResponseDto {
 
     public static Builder builder() {
         return new Builder();

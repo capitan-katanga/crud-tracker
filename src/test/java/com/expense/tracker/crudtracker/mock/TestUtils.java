@@ -44,7 +44,7 @@ public final class TestUtils {
     public static TransactionRequestDto createTransactionRequestDto(TransactionType type, TransactionDetailRequestDto detail) {
         return TransactionRequestDto.builder()
                 .userId(TEST_USER_ID)
-                .type(type)
+                .type(type.name())
                 .amount(TEST_AMOUNT)
                 .currency(TEST_CURRENCY)
                 .description(TEST_DESCRIPTION)

@@ -3,29 +3,50 @@ package com.expense.tracker.crudtracker.dto;
 import com.expense.tracker.crudtracker.dto.transfer.TransferResponseDto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record TransactionResponseDto(UUID id,
-                                     UUID userId,
-                                     String type,
-                                     BigDecimal amount,
-                                     String currency,
-                                     String description,
-                                     LocalDateTime transactionDate,
-                                     LocalDateTime createdAt,
-                                     @JsonTypeInfo(
-                                             use = JsonTypeInfo.Id.NAME,
-                                             include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
-                                             property = "type"
-                                     )
-                                     @JsonSubTypes({
-                                             @JsonSubTypes.Type(value = TransferResponseDto.class, name = "TRANSFER")
-                                             // add new type here.
-                                     })
-                                     TransactionDetailResponseDto detail) {
+@Schema(description = "Transaction response payload. Contains main transaction fields and polymorphic detail.")
+public record TransactionResponseDto(
+        @Schema(description = "UUID of the transaction.", example = "c952509d-d65b-427e-9f3a-abddf3e0d568")
+        UUID id,
+
+        @Schema(description = "UUID of the user who owns the transaction.", example = "12c40443-acc4-440d-8091-05a1dc3b011a")
+        UUID userId,
+
+        @Schema(description = "Transaction type (TRANSFER, SERVICE_PAYMENT, etc).", example = "TRANSFER")
+        String type,
+
+        @Schema(description = "Amount of the transaction.", example = "1000.00")
+        BigDecimal amount,
+
+        @Schema(description = "Currency code (ISO 4217).", example = "ARS")
+        String currency,
+
+        @Schema(description = "Description of the transaction.", example = "Wire transfer to Carla Gonzalez")
+        String description,
+
+        @Schema(description = "Date and time the transaction happened.", example = "2024-06-01T12:44:00")
+        LocalDateTime transactionDate,
+
+        @Schema(description = "Timestamp when the transaction was registered.", example = "2024-06-01T12:48:17")
+        LocalDateTime createdAt,
+
+        @JsonTypeInfo(
+                use = JsonTypeInfo.Id.NAME,
+                include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+                property = "type"
+        )
+        @JsonSubTypes({
+                @JsonSubTypes.Type(value = TransferResponseDto.class, name = "TRANSFER")
+                // add new type here.
+        })
+        @Schema(description = "Polymorphic detail, resolved by the transaction 'type'.")
+        TransactionDetailResponseDto detail
+) {
 
     public static Builder builder() {
         return new Builder();

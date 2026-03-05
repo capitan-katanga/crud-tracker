@@ -1,9 +1,9 @@
 package com.expense.tracker.crudtracker.dto;
 
 import com.expense.tracker.crudtracker.dto.transfer.TransferRequestDto;
-import com.expense.tracker.crudtracker.entity.TransactionType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,29 +11,39 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record TransactionRequestDto(@NotNull UUID userId,
-                                    TransactionType type,
-                                    @NotNull BigDecimal amount,
-                                    String currency,
-                                    String description,
-                                    @NotNull LocalDateTime transactionDate,
-                                    @Valid
-                                    @JsonTypeInfo(
-                                            use = JsonTypeInfo.Id.NAME,
-                                            include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
-                                            property = "type"
-                                    )
-                                    @JsonSubTypes({
-                                            @JsonSubTypes.Type(value = TransferRequestDto.class, name = "TRANSFER")
-                                            // add new type here.
-                                    })
-                                    TransactionDetailRequestDto detail) {
+@Schema(description = "Payload for a transaction registration request. Transaction 'type' determines the detail polymorphic payload.")
+public record TransactionRequestDto(
+        @Schema(description = "UUID of the user initiating the transaction.", example = "12c40443-acc4-440d-8091-05a1dc3b011a")
+        @NotNull UUID userId,
 
-    public TransactionRequestDto {
-        if (type == null) {
-            type = TransactionType.UNKNOWN;
-        }
-    }
+        @Schema(description = "Transaction type (TRANSFER, SERVICE_PAYMENT, etc). Controls polymorphism on 'detail'.", example = "TRANSFER")
+        String type,
+
+        @Schema(description = "Amount of the transaction.", example = "1000.00")
+        @NotNull BigDecimal amount,
+
+        @Schema(description = "Currency code (ISO 4217).", example = "ARS")
+        String currency,
+
+        @Schema(description = "Description of the transaction.", example = "Wire transfer to Carla Gonzalez")
+        String description,
+
+        @Schema(description = "Date and time of the transaction (ISO format).", example = "2024-06-01T12:44:00")
+        @NotNull LocalDateTime transactionDate,
+
+        @Valid
+        @JsonTypeInfo(
+                use = JsonTypeInfo.Id.NAME,
+                include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+                property = "type"
+        )
+        @JsonSubTypes({
+                @JsonSubTypes.Type(value = TransferRequestDto.class, name = "TRANSFER")
+                // add new type here.
+        })
+        @Schema(description = "Detail payload. Type-specific, resolved by the 'type' field.")
+        TransactionDetailRequestDto detail
+) {
 
     public static Builder builder() {
         return new Builder();
@@ -41,7 +51,7 @@ public record TransactionRequestDto(@NotNull UUID userId,
 
     public static final class Builder {
         private UUID userId;
-        private TransactionType type;
+        private String type;
         private BigDecimal amount;
         private String currency;
         private String description;
@@ -53,7 +63,7 @@ public record TransactionRequestDto(@NotNull UUID userId,
             return this;
         }
 
-        public Builder type(TransactionType type) {
+        public Builder type(String type) {
             this.type = type;
             return this;
         }

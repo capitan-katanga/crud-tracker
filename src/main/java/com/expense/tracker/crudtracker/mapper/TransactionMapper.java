@@ -4,6 +4,8 @@ import com.expense.tracker.crudtracker.dto.TransactionDetailResponseDto;
 import com.expense.tracker.crudtracker.dto.TransactionRequestDto;
 import com.expense.tracker.crudtracker.dto.TransactionResponseDto;
 import com.expense.tracker.crudtracker.entity.Transaction;
+import com.expense.tracker.crudtracker.entity.TransactionType;
+
 
 public class TransactionMapper {
 
@@ -11,7 +13,7 @@ public class TransactionMapper {
         return new Transaction(
                 null,
                 requestDto.userId(),
-                requestDto.type(),
+                TransactionType.safeResolveType(requestDto.type()),
                 requestDto.amount(),
                 requestDto.currency(),
                 requestDto.description(),

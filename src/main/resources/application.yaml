@@ -21,3 +21,29 @@ spring:
     url: jdbc:postgresql://localhost:5332/ExpenseTracker
     username: ${POSTGRES_DB_NAME}
     password: ${POSTGRES_DB_PASSWORD}
+
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+    docExpansion: none
+    displayRequestDuration: true
+  packages-to-scan:
+    - com.expense.tracker.crudtracker.controller
+    - com.expense.tracker.crudtracker.apidoc
+  writer-with-default-pretty-printer: true
+  show-actuator: true
+
+management:
+  otlp:
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/logs

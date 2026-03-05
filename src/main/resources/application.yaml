@@ -23,22 +23,13 @@ spring:
     password: ${POSTGRES_DB_PASSWORD}
 
 springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
   swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
     operationsSorter: method
-    tagsSorter: alpha
-    tryItOutEnabled: true
     docExpansion: none
     displayRequestDuration: true
   packages-to-scan:
     - com.expense.tracker.crudtracker.controller
     - com.expense.tracker.crudtracker.apidoc
-  paths-to-match:
-    - /api/**
   writer-with-default-pretty-printer: true
   show-actuator: true
 

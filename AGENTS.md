@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Spring Boot 4.0.2 expense tracker CRUD API. Java 25, PostgreSQL, Maven.
+Spring Boot 4.1.1 expense tracker CRUD API. Java 25, PostgreSQL, Maven.
 No Lombok, no MapStruct. Manual mappers, explicit getters/setters/constructors.
 
 ---
@@ -39,7 +39,12 @@ mvn clean verify
   controller, dto, entity, exception, mapper, repository, *Application).
 - Test data: PostgreSQL por Docker Compose en puerto **5332**. Variables de entorno: `POSTGRES_DB_NAME` (`admin`),
   `POSTGRES_DB_PASSWORD` (`Password123`).
-- Observabilidad: Grafana LGTM stack, OpenTelemetry exporta a localhost (`4317`, `4318`).
+- Observabilidad: la provee la librería `com.expense.tracker:tracker-common-logger` (instalarla antes con
+  `mvn clean install` en `../tracker-common-logger`). Trae actuator, OTLP hacia el stack Grafana LGTM
+  (`localhost:4318`), el `logback-spring.xml` base y el logueo de entrada/salida HTTP con `X-Correlation-Id`
+  y `X-Trace-Id`. No agregar acá dependencias de OTel, `logback-spring.xml` ni el bloque
+  `management.otlp`/`management.opentelemetry`: solo se pisan los defaults si hace falta (ver el README de
+  la lib).
 - Virtual threads habilitadas: `spring.threads.virtual.enabled: true` en config.
 
 ---
@@ -48,7 +53,7 @@ mvn clean verify
 
 ```
 src/main/java/com/expense/tracker/crudtracker/
-  config/          Observability config (OpenTelemetry, logback)
+  config/          App config (OpenAPI); la observabilidad viene de tracker-common-logger
   controller/      REST API (@RestController)
   service/         Business logic interfaces
   service/impl/    Business logic implementations (@Service)

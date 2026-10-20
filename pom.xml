@@ -18,8 +18,8 @@
 
     <properties>
         <java.version>25</java.version>
-        <logback-appender.version>2.25.0-alpha</logback-appender.version>
         <springdoc-openapi.version>3.0.2</springdoc-openapi.version>
+        <tracker-common-logger.version>0.1.0</tracker-common-logger.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <sonar.coverage.exclusions>
             **/config/**,
@@ -45,11 +45,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -77,15 +72,11 @@
             <version>${springdoc-openapi.version}</version>
         </dependency>
 
-        <!-- OpenTelemetry dependencies -->
+        <!-- Observabilidad (actuator, OTLP hacia LGTM, logback base, logueo HTTP con correlationId) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-opentelemetry</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.opentelemetry.instrumentation</groupId>
-            <artifactId>opentelemetry-logback-appender-1.0</artifactId>
-            <version>${logback-appender.version}</version>
+            <groupId>com.expense.tracker</groupId>
+            <artifactId>tracker-common-logger</artifactId>
+            <version>${tracker-common-logger.version}</version>
         </dependency>
 
         <dependency>

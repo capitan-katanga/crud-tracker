@@ -19,7 +19,7 @@ spring:
     show-sql: true
   datasource:
     url: jdbc:postgresql://localhost:5332/ExpenseTracker
-    username: ${POSTGRES_DB_NAME}
+    username: ${POSTGRES_DB_USERNAME}
     password: ${POSTGRES_DB_PASSWORD}
 
 springdoc:
@@ -47,3 +47,5 @@ management:
       export:
         otlp:
           endpoint: http://localhost:4318/v1/logs
+server:
+  port: 8080

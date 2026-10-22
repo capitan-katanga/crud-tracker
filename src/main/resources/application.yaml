@@ -12,6 +12,7 @@ spring:
       enabled: true
   docker:
     compose:
+      file: ../tracker-infra/compose.yaml   # infra compartida (Postgres, LGTM, Keycloak)
       lifecycle-management: start-only
   jpa:
     hibernate:

@@ -27,7 +27,7 @@ mvn test -Dtest="TransactionServiceImplTest#getTransactionNotFound"
 # Build package (JAR in target/)
 mvn package
 
-# Run the app (requires PostgreSQL via Docker Compose)
+# Run the app (levanta la infra de ../tracker-infra con spring-boot-docker-compose)
 mvn spring-boot:run
 
 # Clean build (runs full test + JaCoCo coverage checks)
@@ -37,7 +37,10 @@ mvn clean verify
 - No Checkstyle, SpotBugs o PMD configurado por defecto (no hay linter/formatter plugin).
 - Code coverage: JaCoCo. Reporte en `target/site/jacoco/index.html`, 90% instrucciones/80% ramas mínimo (excluye config,
   controller, dto, entity, exception, mapper, repository, *Application).
-- Test data: PostgreSQL por Docker Compose en puerto **5332**. Variables de entorno: `POSTGRES_DB_NAME` (`admin`),
+- Infra: no hay compose propio. `spring.docker.compose.file` apunta a `../tracker-infra/compose.yaml` (Postgres,
+  LGTM con Grafana en `localhost:3001`, Keycloak en `localhost:8180`); hay que tener clonado `tracker-infra` al
+  lado y su `.env` creado (`cp .env.example .env`).
+- Test data: PostgreSQL en puerto **5332**. Variables de entorno: `POSTGRES_DB_NAME` (`admin`),
   `POSTGRES_DB_PASSWORD` (`Password123`).
 - Observabilidad: la provee la librería `com.expense.tracker:tracker-common-logger` (instalarla antes con
   `mvn clean install` en `../tracker-common-logger`). Trae actuator, OTLP hacia el stack Grafana LGTM

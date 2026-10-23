@@ -16,12 +16,20 @@ spring:
       lifecycle-management: start-only
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
+    properties:
+      hibernate:
+        default_schema: transactional
   datasource:
-    url: jdbc:postgresql://localhost:5332/ExpenseTracker
-    username: ${POSTGRES_DB_USERNAME}
-    password: ${POSTGRES_DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5332/ExpenseTracker?currentSchema=transactional
+    username: ${TRANSACTIONAL_DB_USERNAME:transactional}
+    password: ${TRANSACTIONAL_DB_PASSWORD}
+  flyway:
+    schemas: transactional
+    default-schema: transactional
+    create-schemas: false
+    validate-migration-naming: true
 
 springdoc:
   swagger-ui:

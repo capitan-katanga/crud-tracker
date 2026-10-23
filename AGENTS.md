@@ -15,7 +15,7 @@ All commands use system Maven (`mvn`).
 # Compile (skip tests)
 mvn compile
 
-# Run all unit & integration tests
+# Run unit tests only (no Spring context)
 mvn test
 
 # Run a single test class
@@ -30,7 +30,7 @@ mvn package
 # Run the app (levanta la infra de ../tracker-infra con spring-boot-docker-compose)
 mvn spring-boot:run
 
-# Clean build (runs full test + JaCoCo coverage checks)
+# Clean build: unit tests + *IT with Testcontainers (requires Docker) + JaCoCo coverage checks
 mvn clean verify
 ```
 
@@ -40,8 +40,10 @@ mvn clean verify
 - Infra: no hay compose propio. `spring.docker.compose.file` apunta a `../tracker-infra/compose.yaml` (Postgres,
   LGTM con Grafana en `localhost:3001`, Keycloak en `localhost:8180`); hay que tener clonado `tracker-infra` al
   lado y su `.env` creado (`cp .env.example .env`).
-- Test data: PostgreSQL en puerto **5332**. Variables de entorno: `POSTGRES_DB_NAME` (`admin`),
-  `POSTGRES_DB_PASSWORD` (`Password123`).
+- Base de datos: PostgreSQL en puerto **5332**, DB `ExpenseTracker`, rol `transactional` y schema `transactional`.
+  Variables de entorno: `TRANSACTIONAL_DB_PASSWORD` (obligatoria, mismo valor que el `.env` de tracker-infra) y
+  `TRANSACTIONAL_DB_USERNAME` (opcional, default `transactional`). Postgres no tiene service connection (label
+  `org.springframework.boot.ignore` en tracker-infra): la datasource sale de `spring.datasource.*` del yaml.
 - Observabilidad: la provee la librería `com.expense.tracker:tracker-common-logger` (instalarla antes con
   `mvn clean install` en `../tracker-common-logger`). Trae actuator, OTLP hacia el stack Grafana LGTM
   (`localhost:4318`), el `logback-spring.xml` base y el logueo de entrada/salida HTTP con `X-Correlation-Id`
@@ -52,9 +54,22 @@ mvn clean verify
 
 ---
 
+## Base de datos y migraciones
+
+- Flyway: `src/main/resources/db/migration/V<n>__<desc>.sql`, sin calificar con schema (Flyway fija el schema
+  `transactional`). Nunca editar una migración ya aplicada: todo cambio va en una nueva.
+- `ddl-auto: validate`: toda entidad o columna nueva lleva su migración, o el arranque falla.
+- `transactions.type` no tiene `CHECK`: agregar un `TransactionType` no requiere migración.
+- Flyway no crea schemas (`create-schemas: false`): rol y schema los crea tracker-infra
+  (`postgres/init/02-services.sh`).
+
+---
+
 ## Directory Structure
 
 ```
+src/main/resources/db/migration/   Flyway migrations (V<n>__<desc>.sql)
+
 src/main/java/com/expense/tracker/crudtracker/
   config/          App config (OpenAPI); la observabilidad viene de tracker-common-logger
   controller/      REST API (@RestController)
@@ -72,6 +87,7 @@ src/main/java/com/expense/tracker/crudtracker/
 src/test/java/com/expense/tracker/crudtracker/
   service/impl/    Unit tests for services
   mock/            TestUtils, constants and factory methods
+  support/         AbstractPostgresIT (Testcontainers base for *IT)
 ```
 
 ---
@@ -155,7 +171,12 @@ src/test/java/com/expense/tracker/crudtracker/
 ### Stack
 
 - JUnit 5 + Mockito (`@ExtendWith(MockitoExtension.class)`) + Hamcrest
-- Never load Spring context; pure mock-based access only
+- Unit tests (`*Test`, surefire): never load Spring context; pure mock-based access only
+- Exception: integration tests (`*IT`, failsafe) load the context with Testcontainers (`pgvector/pgvector:pg17`)
+  and need Docker. They extend `support/AbstractPostgresIT` (singleton container, connects as the `transactional`
+  role with the init script in `src/test/resources/testcontainers/`, which must mirror tracker-infra's)
+- `mvn test` runs only unit tests; `mvn verify` runs both. JaCoCo `check` measures only unit tests
+  (`jacoco.exec`); the IT report is informative, in `target/site/jacoco-it`
 
 ### Test Structure
 

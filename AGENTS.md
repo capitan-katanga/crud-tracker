@@ -44,6 +44,11 @@ mvn clean verify
   Variables de entorno: `TRANSACTIONAL_DB_PASSWORD` (obligatoria, mismo valor que el `.env` de tracker-infra) y
   `TRANSACTIONAL_DB_USERNAME` (opcional, default `transactional`). Postgres no tiene service connection (label
   `org.springframework.boot.ignore` en tracker-infra): la datasource sale de `spring.datasource.*` del yaml.
+- Pool HikariCP fijo `transactional` (tag `pool` de las métricas `hikaricp.*` y prefijo de sus logs), todas
+  opcionales: `TRANSACTIONAL_DB_POOL_SIZE` (mínimo = máximo, default 10), `DB_POOL_CONNECTION_TIMEOUT_MS` (5000),
+  `DB_POOL_MAX_LIFETIME_MS` (1800000), `DB_POOL_KEEPALIVE_TIME_MS` (300000) y `DB_POOL_LEAK_DETECTION_MS` (30000).
+  El rol tiene `CONNECTION LIMIT` = pool + 2 (12): subir el pool exige subir el límite en tracker-infra
+  (`postgres/init/02-services.sh`) y en `src/test/resources/testcontainers/init-transactional.sql`.
 - Observabilidad: la provee la librería `com.expense.tracker:tracker-common-logger` (instalarla antes con
   `mvn clean install` en `../tracker-common-logger`). Trae actuator, OTLP hacia el stack Grafana LGTM
   (`localhost:4318`), el `logback-spring.xml` base y el logueo de entrada/salida HTTP con `X-Correlation-Id`
@@ -175,6 +180,11 @@ src/test/java/com/expense/tracker/crudtracker/
 - Exception: integration tests (`*IT`, failsafe) load the context with Testcontainers (`pgvector/pgvector:pg17`)
   and need Docker. They extend `support/AbstractPostgresIT` (singleton container, connects as the `transactional`
   role with the init script in `src/test/resources/testcontainers/`, which must mirror tracker-infra's)
+- All `*IT` share one context configuration, declared in `AbstractPostgresIT` (`@SpringBootTest` +
+  `@AutoConfigureMockMvc`), so they run on a single cached context and a single fixed pool. `@MockitoBean`,
+  `@TestPropertySource`, `@Import` or another `@AutoConfigure*` on a subclass create a second context with another
+  pool that does not fit in the role's `CONNECTION LIMIT`: don't add them without reviewing that budget
+- `HikariPoolIT` asserts the `application.yaml` pool defaults: it fails if `TRANSACTIONAL_DB_POOL_SIZE` or `DB_POOL_*` are exported
 - `mvn test` runs only unit tests; `mvn verify` runs both. JaCoCo `check` measures only unit tests
   (`jacoco.exec`); the IT report is informative, in `target/site/jacoco-it`
 

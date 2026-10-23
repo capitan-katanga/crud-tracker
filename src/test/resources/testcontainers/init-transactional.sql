@@ -8,6 +8,9 @@ GRANT CONNECT ON DATABASE "ExpenseTracker" TO transactional;
 CREATE SCHEMA transactional AUTHORIZATION transactional;
 ALTER ROLE transactional IN DATABASE "ExpenseTracker" SET search_path = transactional;
 
+-- Presupuesto de conexiones (ADR-013): límite = pool del servicio + 2 (psql o debug con su rol).
+ALTER ROLE transactional CONNECTION LIMIT 12;
+
 -- Schema ajeno (del superusuario) para probar el aislamiento
 CREATE SCHEMA foreign_service;
 CREATE TABLE foreign_service.secret (id int);

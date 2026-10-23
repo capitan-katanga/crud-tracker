@@ -1,5 +1,7 @@
 package com.expense.tracker.crudtracker.support;
 
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -9,6 +11,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
+// configuración de contexto única para todos los *IT: un segundo contexto abre otro pool fijo y supera el CONNECTION LIMIT del rol
+@SpringBootTest
+@AutoConfigureMockMvc
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public abstract class AbstractPostgresIT {
 

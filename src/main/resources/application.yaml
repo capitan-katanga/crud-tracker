@@ -25,6 +25,14 @@ spring:
     url: jdbc:postgresql://localhost:5332/ExpenseTracker?currentSchema=transactional
     username: ${TRANSACTIONAL_DB_USERNAME:transactional}
     password: ${TRANSACTIONAL_DB_PASSWORD}
+    hikari:   # pool fijo (ADR-013): el rol tiene CONNECTION LIMIT = pool + 2 en tracker-infra
+      pool-name: transactional
+      maximum-pool-size: ${TRANSACTIONAL_DB_POOL_SIZE:10}
+      minimum-idle: ${TRANSACTIONAL_DB_POOL_SIZE:10}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:5000}
+      max-lifetime: ${DB_POOL_MAX_LIFETIME_MS:1800000}
+      keepalive-time: ${DB_POOL_KEEPALIVE_TIME_MS:300000}
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION_MS:30000}
   flyway:
     schemas: transactional
     default-schema: transactional

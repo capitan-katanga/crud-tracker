@@ -41,11 +41,14 @@ mvn clean verify
   LGTM con Grafana en `localhost:3001`, Keycloak en `localhost:8180`); hay que tener clonado `tracker-infra` al
   lado y su `.env` creado (`cp .env.example .env`).
 - Base de datos: PostgreSQL en puerto **5332**, DB `ExpenseTracker`, rol `transactional` y schema `transactional`.
-  Variables de entorno: `TRANSACTIONAL_DB_PASSWORD` (obligatoria, mismo valor que el `.env` de tracker-infra) y
-  `TRANSACTIONAL_DB_USERNAME` (opcional, default `transactional`). Postgres no tiene service connection (label
-  `org.springframework.boot.ignore` en tracker-infra): la datasource sale de `spring.datasource.*` del yaml.
-- Pool HikariCP fijo `transactional` (tag `pool` de las métricas `hikaricp.*` y prefijo de sus logs), todas
-  opcionales: `TRANSACTIONAL_DB_POOL_SIZE` (mínimo = máximo, default 10), `DB_POOL_CONNECTION_TIMEOUT_MS` (5000),
+  Postgres no tiene service connection (label `org.springframework.boot.ignore` en tracker-infra): la datasource
+  sale de `spring.datasource.*` del yaml.
+- Configuración local: el yaml no tiene defaults; todo sale de un `.env` gitignoreado (`cp .env.example .env`),
+  que carga `spring.config.import` (formato `.properties`; una env var exportada lo pisa). Variables:
+  `TRANSACTIONAL_DB_URL`, `TRANSACTIONAL_DB_USERNAME`, `TRANSACTIONAL_DB_PASSWORD` (mismo valor que el `.env` de
+  tracker-infra) y las del pool. Una variable nueva va al yaml como `${VAR}` y a `.env.example` con su valor de dev.
+- Pool HikariCP fijo `transactional` (tag `pool` de las métricas `hikaricp.*` y prefijo de sus logs):
+  `TRANSACTIONAL_DB_POOL_SIZE` (mínimo = máximo, 10), `DB_POOL_CONNECTION_TIMEOUT_MS` (5000),
   `DB_POOL_MAX_LIFETIME_MS` (1800000), `DB_POOL_KEEPALIVE_TIME_MS` (300000) y `DB_POOL_LEAK_DETECTION_MS` (30000).
   El rol tiene `CONNECTION LIMIT` = pool + 2 (12): subir el pool exige subir el límite en tracker-infra
   (`postgres/init/02-services.sh`) y en `src/test/resources/testcontainers/init-transactional.sql`.
@@ -184,7 +187,9 @@ src/test/java/com/expense/tracker/crudtracker/
   `@AutoConfigureMockMvc`), so they run on a single cached context and a single fixed pool. `@MockitoBean`,
   `@TestPropertySource`, `@Import` or another `@AutoConfigure*` on a subclass create a second context with another
   pool that does not fit in the role's `CONNECTION LIMIT`: don't add them without reviewing that budget
-- `HikariPoolIT` asserts the `application.yaml` pool defaults: it fails if `TRANSACTIONAL_DB_POOL_SIZE` or `DB_POOL_*` are exported
+- `AbstractPostgresIT` sets every `.env` variable via `@DynamicPropertySource`, which outranks `.env` and exported
+  env vars, so the `*IT` don't depend on them (CI has no `.env`). A new `${VAR}` in the yaml must be added there too.
+  `HikariPoolIT` asserts that the yaml maps those pool values
 - `mvn test` runs only unit tests; `mvn verify` runs both. JaCoCo `check` measures only unit tests
   (`jacoco.exec`); the IT report is informative, in `target/site/jacoco-it`
 

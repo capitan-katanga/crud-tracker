@@ -1,6 +1,8 @@
 spring:
   application:
     name: crud-tracker
+  config:
+    import: optional:file:.env[.properties]   # .env local gitignoreado (ver .env.example); las env vars exportadas lo pisan
   mvc:
     problemdetails:
       enabled: true
@@ -22,17 +24,17 @@ spring:
       hibernate:
         default_schema: transactional
   datasource:
-    url: jdbc:postgresql://localhost:5332/ExpenseTracker?currentSchema=transactional
-    username: ${TRANSACTIONAL_DB_USERNAME:transactional}
+    url: ${TRANSACTIONAL_DB_URL}
+    username: ${TRANSACTIONAL_DB_USERNAME}
     password: ${TRANSACTIONAL_DB_PASSWORD}
     hikari:   # pool fijo (ADR-013): el rol tiene CONNECTION LIMIT = pool + 2 en tracker-infra
       pool-name: transactional
-      maximum-pool-size: ${TRANSACTIONAL_DB_POOL_SIZE:10}
-      minimum-idle: ${TRANSACTIONAL_DB_POOL_SIZE:10}
-      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:5000}
-      max-lifetime: ${DB_POOL_MAX_LIFETIME_MS:1800000}
-      keepalive-time: ${DB_POOL_KEEPALIVE_TIME_MS:300000}
-      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION_MS:30000}
+      maximum-pool-size: ${TRANSACTIONAL_DB_POOL_SIZE}
+      minimum-idle: ${TRANSACTIONAL_DB_POOL_SIZE}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS}
+      max-lifetime: ${DB_POOL_MAX_LIFETIME_MS}
+      keepalive-time: ${DB_POOL_KEEPALIVE_TIME_MS}
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION_MS}
   flyway:
     schemas: transactional
     default-schema: transactional

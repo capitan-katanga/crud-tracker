@@ -16,11 +16,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.notNullValue;
 
-// verifica los defaults del application.yaml: falla si hay env vars de pool exportadas
+// verifica que el application.yaml mapea las variables de pool que fija AbstractPostgresIT
 class HikariPoolIT extends AbstractPostgresIT {
 
     private static final String POOL_NAME = "transactional";
-    private static final int POOL_SIZE = 10;
     private static final int CONNECTION_LIMIT = 12;
 
     private final DataSource dataSource;

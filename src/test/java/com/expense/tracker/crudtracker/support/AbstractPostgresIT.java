@@ -18,6 +18,7 @@ import org.testcontainers.utility.MountableFile;
 public abstract class AbstractPostgresIT {
 
     protected static final String DB_ROLE = "transactional";
+    protected static final int POOL_SIZE = 10;
 
     // singleton: con @Container se pararía entre clases IT y rompería el contexto cacheado
     protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
@@ -32,12 +33,18 @@ public abstract class AbstractPostgresIT {
         POSTGRES.start();
     }
 
-    // sin @ServiceConnection: usaría el superusuario y no probaría los permisos del rol
+    // sin @ServiceConnection: usaría el superusuario y no probaría los permisos del rol.
+    // Las mismas variables del .env, con más precedencia que el .env y las env vars: el test no depende de ellos
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", () -> DB_ROLE);
-        registry.add("spring.datasource.password", () -> "transactional-it");
+        registry.add("TRANSACTIONAL_DB_URL", POSTGRES::getJdbcUrl);
+        registry.add("TRANSACTIONAL_DB_USERNAME", () -> DB_ROLE);
+        registry.add("TRANSACTIONAL_DB_PASSWORD", () -> "transactional-it");
+        registry.add("TRANSACTIONAL_DB_POOL_SIZE", () -> POOL_SIZE);
+        registry.add("DB_POOL_CONNECTION_TIMEOUT_MS", () -> 5_000);
+        registry.add("DB_POOL_MAX_LIFETIME_MS", () -> 1_800_000);
+        registry.add("DB_POOL_KEEPALIVE_TIME_MS", () -> 300_000);
+        registry.add("DB_POOL_LEAK_DETECTION_MS", () -> 30_000);
         registry.add("spring.docker.compose.enabled", () -> "false");
     }
 

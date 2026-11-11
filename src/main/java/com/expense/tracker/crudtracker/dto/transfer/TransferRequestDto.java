@@ -2,9 +2,8 @@ package com.expense.tracker.crudtracker.dto.transfer;
 
 import com.expense.tracker.crudtracker.dto.TransactionDetailRequestDto;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import jakarta.validation.constraints.NotEmpty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 
 @JsonTypeName("TRANSFER")
 @Schema(description = "Detail payload for transfer-type transactions.")

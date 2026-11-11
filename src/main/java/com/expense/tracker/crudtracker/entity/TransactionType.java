@@ -1,9 +1,8 @@
 package com.expense.tracker.crudtracker.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(enumAsRef = true, description = "Type of transaction. Determines detail polymorphism.")
 public enum TransactionType {

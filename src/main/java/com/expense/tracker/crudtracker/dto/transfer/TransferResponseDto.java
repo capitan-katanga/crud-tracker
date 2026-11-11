@@ -2,10 +2,9 @@ package com.expense.tracker.crudtracker.dto.transfer;
 
 import com.expense.tracker.crudtracker.dto.TransactionDetailResponseDto;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonTypeName("TRANSFER")
 @Schema(description = "Detail response for transfer-type transactions.")

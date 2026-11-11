@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Spring Boot 4.1.1 expense tracker CRUD API. Java 25, PostgreSQL, Maven.
+expense-ledger: API CRUD de transacciones del expense tracker (Spring Boot 4.1.1). Java 25, PostgreSQL, Maven.
 No Lombok, no MapStruct. Manual mappers, explicit getters/setters/constructors.
 
 ---
@@ -40,18 +40,18 @@ mvn clean verify
 - Infra: no hay compose propio. `spring.docker.compose.file` apunta a `../tracker-infra/compose.yaml` (Postgres,
   LGTM con Grafana en `localhost:3001`, Keycloak en `localhost:8180`); hay que tener clonado `tracker-infra` al
   lado y su `.env` creado (`cp .env.example .env`).
-- Base de datos: PostgreSQL en puerto **5332**, DB `ExpenseTracker`, rol `transactional` y schema `transactional`.
+- Base de datos: PostgreSQL en puerto **5332**, DB `ExpenseTracker`, rol `expense_ledger` y schema `expense_ledger`.
   Postgres no tiene service connection (label `org.springframework.boot.ignore` en tracker-infra): la datasource
   sale de `spring.datasource.*` del yaml.
 - Configuración local: el yaml no tiene defaults; todo sale de un `.env` gitignoreado (`cp .env.example .env`),
   que carga `spring.config.import` (formato `.properties`; una env var exportada lo pisa). Variables:
-  `TRANSACTIONAL_DB_URL`, `TRANSACTIONAL_DB_USERNAME`, `TRANSACTIONAL_DB_PASSWORD` (mismo valor que el `.env` de
+  `EXPENSE_LEDGER_DB_URL`, `EXPENSE_LEDGER_DB_USERNAME`, `EXPENSE_LEDGER_DB_PASSWORD` (mismo valor que el `.env` de
   tracker-infra) y las del pool. Una variable nueva va al yaml como `${VAR}` y a `.env.example` con su valor de dev.
-- Pool HikariCP fijo `transactional` (tag `pool` de las métricas `hikaricp.*` y prefijo de sus logs):
-  `TRANSACTIONAL_DB_POOL_SIZE` (mínimo = máximo, 10), `DB_POOL_CONNECTION_TIMEOUT_MS` (5000),
+- pool HikariCP fijo `expense-ledger` (tag `pool` de las métricas `hikaricp.*` y prefijo de sus logs):
+  `EXPENSE_LEDGER_DB_POOL_SIZE` (mínimo = máximo, 10), `DB_POOL_CONNECTION_TIMEOUT_MS` (5000),
   `DB_POOL_MAX_LIFETIME_MS` (1800000), `DB_POOL_KEEPALIVE_TIME_MS` (300000) y `DB_POOL_LEAK_DETECTION_MS` (30000).
   El rol tiene `CONNECTION LIMIT` = pool + 2 (12): subir el pool exige subir el límite en tracker-infra
-  (`postgres/init/02-services.sh`) y en `src/test/resources/testcontainers/init-transactional.sql`.
+  (`postgres/init/02-services.sh`) y en `src/test/resources/testcontainers/init-expense-ledger.sql`.
 - Observabilidad: la provee la librería `com.expense.tracker:tracker-common-logger` (instalarla antes con
   `mvn clean install` en `../tracker-common-logger`). Trae actuator, OTLP hacia el stack Grafana LGTM
   (`localhost:4318`), el `logback-spring.xml` base y el logueo de entrada/salida HTTP con `X-Correlation-Id`
@@ -65,7 +65,7 @@ mvn clean verify
 ## Base de datos y migraciones
 
 - Flyway: `src/main/resources/db/migration/V<n>__<desc>.sql`, sin calificar con schema (Flyway fija el schema
-  `transactional`). Nunca editar una migración ya aplicada: todo cambio va en una nueva.
+  `expense_ledger`). Nunca editar una migración ya aplicada: todo cambio va en una nueva.
 - `ddl-auto: validate`: toda entidad o columna nueva lleva su migración, o el arranque falla.
 - `transactions.type` no tiene `CHECK`: agregar un `TransactionType` no requiere migración.
 - Flyway no crea schemas (`create-schemas: false`): rol y schema los crea tracker-infra
@@ -78,7 +78,7 @@ mvn clean verify
 ```
 src/main/resources/db/migration/   Flyway migrations (V<n>__<desc>.sql)
 
-src/main/java/com/expense/tracker/crudtracker/
+src/main/java/com/expense/tracker/expenseledger/
   config/          App config (OpenAPI); la observabilidad viene de tracker-common-logger
   controller/      REST API (@RestController)
   service/         Business logic interfaces
@@ -92,7 +92,7 @@ src/main/java/com/expense/tracker/crudtracker/
   strategy/        Transaction type dispatch pattern
   exception/       Custom exceptions, exception handler (@RestControllerAdvice)
 
-src/test/java/com/expense/tracker/crudtracker/
+src/test/java/com/expense/tracker/expenseledger/
   service/impl/    Unit tests for services
   mock/            TestUtils, constants and factory methods
   support/         AbstractPostgresIT (Testcontainers base for *IT)
@@ -181,7 +181,7 @@ src/test/java/com/expense/tracker/crudtracker/
 - JUnit 5 + Mockito (`@ExtendWith(MockitoExtension.class)`) + Hamcrest
 - Unit tests (`*Test`, surefire): never load Spring context; pure mock-based access only
 - Exception: integration tests (`*IT`, failsafe) load the context with Testcontainers (`pgvector/pgvector:pg17`)
-  and need Docker. They extend `support/AbstractPostgresIT` (singleton container, connects as the `transactional`
+  and need Docker. They extend `support/AbstractPostgresIT` (singleton container, connects as the `expense_ledger`
   role with the init script in `src/test/resources/testcontainers/`, which must mirror tracker-infra's)
 - All `*IT` share one context configuration, declared in `AbstractPostgresIT` (`@SpringBootTest` +
   `@AutoConfigureMockMvc`), so they run on a single cached context and a single fixed pool. `@MockitoBean`,

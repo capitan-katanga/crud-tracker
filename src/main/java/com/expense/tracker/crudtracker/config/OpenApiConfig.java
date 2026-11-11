@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
                 description = "API for registering financial transactions/operations. Extensible by transaction type via strategy pattern for future scalability."
         ),
         servers = {
-                @Server(url = "http://localhost:8080", description = "Local development")
+                @Server(url = "http://localhost:8083", description = "Local development")
         }
 )
 public class OpenApiConfig {

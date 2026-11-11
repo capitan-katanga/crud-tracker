@@ -7,6 +7,7 @@ import com.expense.tracker.crudtracker.dto.transfer.TransferRequestDto;
 import com.expense.tracker.crudtracker.dto.transfer.TransferResponseDto;
 import com.expense.tracker.crudtracker.entity.Transaction;
 import com.expense.tracker.crudtracker.entity.TransactionType;
+import com.expense.tracker.crudtracker.entity.TransferDetail;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -96,6 +97,24 @@ public final class TestUtils {
                 .referenceCode(TEST_REFERENCE_CODE)
                 .motive(TEST_MOTIVE)
                 .build();
+    }
+
+    public static TransferDetail createTransferDetailEntity(Transaction transaction) {
+        return new TransferDetail(
+                TRANSFER_DETAIL_ID,
+                transaction,
+                TEST_SENDER_NAME,
+                TEST_SENDER_CUIT,
+                TEST_SENDER_INSTITUTION,
+                TEST_SENDER_ACCOUNT,
+                TEST_RECEIVER_NAME,
+                TEST_RECEIVER_CUIT,
+                TEST_RECEIVER_INSTITUTION,
+                TEST_RECEIVER_ACCOUNT,
+                TEST_OPERATION_NUMBER,
+                TEST_REFERENCE_CODE,
+                TEST_MOTIVE
+        );
     }
 
     public static TransactionResponseDto createTransactionResponseDtoWithTransferDetail() {

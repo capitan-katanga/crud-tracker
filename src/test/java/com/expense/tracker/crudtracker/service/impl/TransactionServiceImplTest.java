@@ -4,6 +4,7 @@ import com.expense.tracker.crudtracker.dto.transfer.TransferResponseDto;
 import com.expense.tracker.crudtracker.entity.Transaction;
 import com.expense.tracker.crudtracker.entity.TransactionType;
 import com.expense.tracker.crudtracker.exception.TransactionNotFoundException;
+import com.expense.tracker.crudtracker.exception.UnsupportedTransactionTypeException;
 import com.expense.tracker.crudtracker.mapper.TransactionMapper;
 import com.expense.tracker.crudtracker.mock.TestUtils;
 import com.expense.tracker.crudtracker.repository.TransactionRepository;
@@ -208,6 +209,21 @@ class TransactionServiceImplTest {
                 () -> service.getTransaction(randomId));
 
         assertThat(response.getMessage(), equalTo("Transaction not found with ID: " + randomId));
+    }
+
+    @Test
+    @DisplayName("Get transaction - no strategy registered for the type.")
+    void getTransactionWithoutStrategy() {
+        var transaction = TestUtils.createTransactionEntity(TransactionType.SERVICE_PAYMENT);
+        when(repository.findById(transaction.getId()))
+                .thenReturn(Optional.of(transaction));
+        when(strategyRegister.getTransactionStrategy(TransactionType.SERVICE_PAYMENT))
+                .thenReturn(null);
+
+        var response = Assertions.assertThrows(UnsupportedTransactionTypeException.class,
+                () -> service.getTransaction(transaction.getId()));
+
+        assertThat(response.getMessage(), equalTo("No strategy found for transaction type: SERVICE_PAYMENT"));
     }
 
 }
